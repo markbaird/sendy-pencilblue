@@ -1,0 +1,63 @@
+{
+    "uid": "sendy",
+    "name": "Sendy",
+	"description": "A PencilBlue plugin to automatically create campaign emails in Sendy from articles",
+    "version": "0.1.0",
+    "pb_version": "0.5.0",
+	"author": {
+		"name": "Mark Baird",
+		"email": "mark.r.baird@gmail.com",
+		"website": ""
+	},
+    "settings": [
+	  {
+		"name": "base_sendy_url",
+		"value": ""
+	  },
+	  {
+		  "name": "api_key",
+		  "value": ""
+	  },
+	  {
+		"name": "from_name",
+		"value": ""
+	  },
+	  {
+		"name": "from_email",
+		"value": ""
+	  },
+	  {
+		"name": "reply_to",
+		"value": ""
+	  },
+	  {
+		"name": "list_ids",
+		"value": ""
+	  },
+	  {
+		"name": "brand_id",
+		"value": ""
+	  },
+	  {
+		"name": "query_string",
+		"value": ""
+	  },
+	  {
+		"name": "pre_html",
+		"value": ""
+	  },
+	  {
+		"name": "post_html",
+		"value": ""
+	  },
+	  {
+		"name": "read_more",
+		"value": true
+	  }
+	],
+	"permissions": {
+	},
+	"main_module": {
+		"path": "sendy.js"
+	}
+}

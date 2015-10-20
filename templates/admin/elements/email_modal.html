@@ -1,0 +1,21 @@
+<div class="modal fade" id="confirm_email_modal">
+	<div class="modal-dialog">
+		<div class="modal-content">
+			<div class="modal-header">
+				<button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+				<h4 class="modal-title">Create Email Campaign</h4>
+			</div>
+			<div class="modal-body">
+				</i> Are you sure you want to email <span style="font-style: italic" ng-bind="objectToEmail.headline"></span>?
+			</div>
+			<div class="modal-footer">
+				<button type="button" class="btn btn-default" data-dismiss="modal" ng-disabled="sending">
+					<i class="fa fa-ban"></i>&nbsp;^loc_CANCEL^
+				</button>
+				<button type="button" class="btn btn-primary" ng-click="emailObject()" ng-disabled="sending">
+					<i class="fa fa-envelope-o"></i>&nbsp;Send&nbsp;<i class="fa fa-spinner fa-spin" ng-if="sending"></i>
+				</button>
+			</div>
+		</div>
+	</div>
+</div>
