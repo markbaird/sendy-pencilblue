@@ -1,5 +1,5 @@
 {
-    "uid": "sendy",
+    "uid": "sendy-pencilblue",
     "name": "Sendy",
 	"description": "A PencilBlue plugin to automatically create campaign emails in Sendy from articles",
     "version": "0.1.0",

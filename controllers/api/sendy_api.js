@@ -15,6 +15,10 @@
  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+var http = require('http');
+var http = require('buffer');
+var querystring = require('querystring');
+
 module.exports = function SendyApiControllerModule(pb) {
 
   //PB dependencies
@@ -53,17 +57,72 @@ module.exports = function SendyApiControllerModule(pb) {
   SendyApiController.prototype.createCampaign = function(cb) {
     var self = this;
     var id = this.pathVars.id;
-    self.articleService.get(id, function(err, article) {
-      if (!util.isObject(article)) {
+
+    PluginService.getSettingsKV('sendy-pencilblue', function(err, settings) {
+      if (util.isError(err)) {
+        pb.log.error(err);
         var content = pb.BaseController.apiResponse(pb.BaseController.API_FAILURE, '', err);
-        cb({content: content, code: isError ? 500 : 400});
+        cb({content: content, code: 500});
+        return;
+      }
+      else if (!settings || !settings.base_sendy_url || settings.base_sendy_url.length === 0
+          || !settings.api_key || settings.api_key.length === 0) {
+        pb.log.warn('Sendy: Settings have not been initialized!');
         return;
       }
 
-      // TODO: Call Sendy API here
 
-      var content = pb.BaseController.apiResponse(pb.BaseController.API_SUCCESS, 'success', "Success");
-      cb({content: content, code: 200})
+      self.articleService.get(id, function(err, article) {
+        if (!util.isObject(article)) {
+          pb.log.error("Article not found [" + id + "]");
+          var content = pb.BaseController.apiResponse(pb.BaseController.API_FAILURE, 'Article not found', err);
+          cb({content: content, code: 500});
+          return;
+        }
+
+        pb.log.info("Creating Email Campaign for [" + article.headline + "]");
+
+        var data = querystring.stringify({
+          api_key: settings.api_key,
+          from_name: settings.from_name,
+          from_email: settings.from_email,
+          reply_to: settings.reply_to,
+          list_ids: settings.list_ids,
+          brand_id: settings.brand_id,
+          query_string: settings.query_string,
+          send_campaign: 0,
+          subject: pb.config.siteName + " - " + article.headline,
+          //plain_text: "",
+          html_text: ""
+        });
+
+        // Call Sendy API
+        var options = {
+          host: settings.base_sendy_url,
+          port: 80,
+          path: '/api/campaigns/create.php',
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'Content-Length': Buffer.byteLength(data)
+          }
+        };
+
+        var req = http.request(options, function(res) {
+          res.setEncoding('utf8');
+          res.on('data', function (chunk) {
+            pb.log.silly("body: " + chunk);
+
+            // TODO: Handle response
+            //var content = pb.BaseController.apiResponse(pb.BaseController.API_SUCCESS, 'success', "Success");
+            //cb({content: content, code: 200})
+
+          });
+        });
+
+        req.write(data);
+        req.end();
+      });
     });
   };
 
