@@ -16,15 +16,13 @@
  */
 
 var http = require('http');
-var http = require('buffer');
+var buffer = require('buffer');
 var querystring = require('querystring');
 
 module.exports = function SendyApiControllerModule(pb) {
 
   //PB dependencies
   var util           = pb.util;
-  var PluginService  = pb.PluginService;
-  var ArticleServiceV2 = pb.ArticleServiceV2;
 
   /**
    * SendyApiControllerModule
@@ -42,12 +40,19 @@ module.exports = function SendyApiControllerModule(pb) {
     var self = this;
     var init = function(err) {
 
+      self.pluginService  = new pb.PluginService();
+
       /**
        *
        * @property service
        * @type {ArticleServiceV2}
        */
-      self.articleService = new ArticleServiceV2(self.getServiceContext());
+      self.articleService = new pb.ArticleServiceV2(self.getServiceContext());
+
+      //create the loader context
+      var ctx     = self.getServiceContext();
+      ctx.service = self.articleService;
+      self.contentViewLoader = new pb.ContentViewLoader(ctx);
 
       cb(err, true);
     };
@@ -56,23 +61,26 @@ module.exports = function SendyApiControllerModule(pb) {
 
   SendyApiController.prototype.createCampaign = function(cb) {
     var self = this;
+
     var id = this.pathVars.id;
 
-    PluginService.getSettingsKV('sendy-pencilblue', function(err, settings) {
+    self.pluginService.getSettingsKV('sendy-pencilblue', function(err, settings) {
       if (util.isError(err)) {
         pb.log.error(err);
-        var content = pb.BaseController.apiResponse(pb.BaseController.API_FAILURE, '', err);
+        var content = pb.BaseController.apiResponse(pb.BaseController.API_FAILURE, err.message);
         cb({content: content, code: 500});
         return;
       }
       else if (!settings || !settings.base_sendy_url || settings.base_sendy_url.length === 0
           || !settings.api_key || settings.api_key.length === 0) {
         pb.log.warn('Sendy: Settings have not been initialized!');
+        var content = pb.BaseController.apiResponse(pb.BaseController.API_FAILURE, 'Sendy: Settings have not been initialized!', err);
+        cb({content: content, code: 500});
         return;
       }
 
 
-      self.articleService.get(id, function(err, article) {
+      self.articleService.get(id, {render: true, readMore: settings.read_more}, function(err, article) {
         if (!util.isObject(article)) {
           pb.log.error("Article not found [" + id + "]");
           var content = pb.BaseController.apiResponse(pb.BaseController.API_FAILURE, 'Article not found', err);
@@ -93,7 +101,7 @@ module.exports = function SendyApiControllerModule(pb) {
           send_campaign: 0,
           subject: pb.config.siteName + " - " + article.headline,
           //plain_text: "",
-          html_text: ""
+          html_text: article.layout
         });
 
         // Call Sendy API
