@@ -11,8 +11,12 @@
 	},
     "settings": [
 	  {
-		"name": "base_sendy_url",
+		"name": "sendy_server_url",
 		"value": ""
+	  },
+	  {
+		"name": "use_https",
+		"value": true
 	  },
 	  {
 		  "name": "api_key",

@@ -16,6 +16,7 @@
  */
 
 var http = require('http');
+var https = require('https');
 var buffer = require('buffer');
 var querystring = require('querystring');
 
@@ -71,7 +72,7 @@ module.exports = function SendyApiControllerModule(pb) {
         cb({content: content, code: 500});
         return;
       }
-      else if (!settings || !settings.base_sendy_url || settings.base_sendy_url.length === 0
+      else if (!settings || !settings.sendy_server_url || settings.sendy_server_url.length === 0
           || !settings.api_key || settings.api_key.length === 0) {
         pb.log.warn('Sendy: Settings have not been initialized!');
         var content = pb.BaseController.apiResponse(pb.BaseController.API_FAILURE, 'Sendy: Settings have not been initialized!', err);
@@ -90,6 +91,8 @@ module.exports = function SendyApiControllerModule(pb) {
 
         pb.log.info("Creating Email Campaign for [" + article.headline + "]");
 
+        var useHttps = settings.use_https;
+
         var data = querystring.stringify({
           api_key: settings.api_key,
           from_name: settings.from_name,
@@ -106,8 +109,8 @@ module.exports = function SendyApiControllerModule(pb) {
 
         // Call Sendy API
         var options = {
-          host: settings.base_sendy_url,
-          port: 80,
+          host: settings.sendy_server_url,
+          port: useHttps ? 443 : 80,
           path: '/api/campaigns/create.php',
           method: 'POST',
           headers: {
@@ -116,7 +119,8 @@ module.exports = function SendyApiControllerModule(pb) {
           }
         };
 
-        var req = http.request(options, function(res) {
+        var protocol = useHttps ? https : http;
+        var req = protocol.request(options, function(res) {
           res.setEncoding('utf8');
           res.on('data', function (chunk) {
             pb.log.silly("body: " + chunk);
