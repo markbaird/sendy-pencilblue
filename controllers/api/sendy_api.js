@@ -123,13 +123,22 @@ module.exports = function SendyApiControllerModule(pb) {
         var req = protocol.request(options, function(res) {
           res.setEncoding('utf8');
           res.on('data', function (chunk) {
-            pb.log.silly("body: " + chunk);
-
-            // TODO: Handle response
-            //var content = pb.BaseController.apiResponse(pb.BaseController.API_SUCCESS, 'success', "Success");
-            //cb({content: content, code: 200})
-
+            if (chunk.indexOf("Campaign created") == 0) {
+              var content = pb.BaseController.apiResponse(pb.BaseController.API_SUCCESS, 'success', "Success");
+              cb({content: content, code: 200})
+            }
+            else {
+              pb.log.error("Sendy error response: " + chunk);
+              var content = pb.BaseController.apiResponse(pb.BaseController.API_FAILURE, chunk, chunk);
+              cb({content: content, code: 500});
+            }
           });
+        });
+
+        req.on('error', function(e) {
+          pb.log.error("Sendy request error: " + e.message);
+          var content = pb.BaseController.apiResponse(pb.BaseController.API_FAILURE, 'Article not found', e.message);
+          cb({content: content, code: 500});
         });
 
         req.write(data);
