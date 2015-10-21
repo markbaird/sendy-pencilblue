@@ -91,58 +91,72 @@ module.exports = function SendyApiControllerModule(pb) {
 
         pb.log.info("Creating Email Campaign for [" + article.headline + "]");
 
-        var useHttps = settings.use_https;
-
-        var data = querystring.stringify({
-          api_key: settings.api_key,
-          from_name: settings.from_name,
-          from_email: settings.from_email,
-          reply_to: settings.reply_to,
-          list_ids: settings.list_ids,
-          brand_id: settings.brand_id,
-          query_string: settings.query_string,
-          send_campaign: 0,
-          subject: pb.config.siteName + " - " + article.headline,
-          //plain_text: "",
-          html_text: article.layout
-        });
-
-        // Call Sendy API
-        var options = {
-          host: settings.sendy_server_url,
-          port: useHttps ? 443 : 80,
-          path: '/api/campaigns/create.php',
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/x-www-form-urlencoded',
-            'Content-Length': Buffer.byteLength(data)
+        var ats = self.ts.getChildInstance();
+        ats.registerLocal('headline', article.headline);
+        ats.registerLocal('content', new pb.TemplateValue(article.layout, false));
+        ats.load('sendy/email', function(err, htmlContent) {
+          if (util.isError(err)) {
+            pb.log.error(err);
+            var content = pb.BaseController.apiResponse(pb.BaseController.API_FAILURE, err.message);
+            cb({content: content, code: 500});
+            return;
           }
-        };
 
-        var protocol = useHttps ? https : http;
-        var req = protocol.request(options, function(res) {
-          res.setEncoding('utf8');
-          res.on('data', function (chunk) {
-            if (chunk.indexOf("Campaign created") == 0) {
-              var content = pb.BaseController.apiResponse(pb.BaseController.API_SUCCESS, 'success', "Success");
-              cb({content: content, code: 200})
-            }
-            else {
-              pb.log.error("Sendy error response: " + chunk);
-              var content = pb.BaseController.apiResponse(pb.BaseController.API_FAILURE, chunk, chunk);
-              cb({content: content, code: 500});
-            }
+          pb.log.debug(htmlContent);
+
+          var useHttps = settings.use_https;
+
+          var data = querystring.stringify({
+            api_key: settings.api_key,
+            from_name: settings.from_name,
+            from_email: settings.from_email,
+            reply_to: settings.reply_to,
+            list_ids: settings.list_ids,
+            brand_id: settings.brand_id,
+            query_string: settings.query_string,
+            send_campaign: 0,
+            subject: pb.config.siteName + " - " + article.headline,
+            //plain_text: "",
+            html_text: htmlContent
           });
-        });
 
-        req.on('error', function(e) {
-          pb.log.error("Sendy request error: " + e.message);
-          var content = pb.BaseController.apiResponse(pb.BaseController.API_FAILURE, 'Article not found', e.message);
-          cb({content: content, code: 500});
-        });
+          // Call Sendy API
+          var options = {
+            host: settings.sendy_server_url,
+            port: useHttps ? 443 : 80,
+            path: '/api/campaigns/create.php',
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/x-www-form-urlencoded',
+              'Content-Length': Buffer.byteLength(data)
+            }
+          };
 
-        req.write(data);
-        req.end();
+          var protocol = useHttps ? https : http;
+          var req = protocol.request(options, function(res) {
+            res.setEncoding('utf8');
+            res.on('data', function (chunk) {
+              if (chunk.indexOf("Campaign created") == 0) {
+                var content = pb.BaseController.apiResponse(pb.BaseController.API_SUCCESS, 'Success', "Success");
+                cb({content: content, code: 200})
+              }
+              else {
+                pb.log.error("Sendy error response: " + chunk);
+                var content = pb.BaseController.apiResponse(pb.BaseController.API_FAILURE, chunk, chunk);
+                cb({content: content, code: 500});
+              }
+            });
+          });
+
+          req.on('error', function(e) {
+            pb.log.error("Sendy request error: " + e.message);
+            var content = pb.BaseController.apiResponse(pb.BaseController.API_FAILURE, e.message, e.message);
+            cb({content: content, code: 500});
+          });
+
+          req.write(data);
+          req.end();
+        });
       });
     });
   };
