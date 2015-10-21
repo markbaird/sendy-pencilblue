@@ -47,14 +47,6 @@
 		"value": ""
 	  },
 	  {
-		"name": "pre_html",
-		"value": ""
-	  },
-	  {
-		"name": "post_html",
-		"value": ""
-	  },
-	  {
 		"name": "read_more",
 		"value": true
 	  }
