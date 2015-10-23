@@ -21,7 +21,7 @@ module.exports = function SendyPluginModule(pb) {
      * SendyPlugin - A cf for exemplifying what the main module file should
      * look like.
      *
-     * @author Brian Hyder <brian@pencilblue.org>
+     * @author Mark Baird
      * @copyright 2015 PencilBlue, LLC
      */
     function SendyPlugin(){}
