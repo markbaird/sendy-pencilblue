@@ -11,7 +11,7 @@
 	},
     "settings": [
 	  {
-		"name": "sendy_server_url",
+		"name": "sendy_server_hostname",
 		"value": ""
 	  },
 	  {

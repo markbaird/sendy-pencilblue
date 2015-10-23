@@ -72,7 +72,7 @@ module.exports = function SendyApiControllerModule(pb) {
         cb({content: content, code: 500});
         return;
       }
-      else if (!settings || !settings.sendy_server_url || settings.sendy_server_url.length === 0
+      else if (!settings || !settings.sendy_server_hostname || settings.sendy_server_hostname.length === 0
           || !settings.api_key || settings.api_key.length === 0) {
         pb.log.warn('Sendy: Settings have not been initialized!');
         var content = pb.BaseController.apiResponse(pb.BaseController.API_FAILURE, 'Sendy: Settings have not been initialized!', err);
@@ -122,7 +122,7 @@ module.exports = function SendyApiControllerModule(pb) {
 
           // Call Sendy API
           var options = {
-            host: settings.sendy_server_url,
+            host: settings.sendy_server_hostname,
             port: useHttps ? 443 : 80,
             path: '/api/campaigns/create.php',
             method: 'POST',
