@@ -1,2 +1,2 @@
-# sendy-pencilblue
-A PencilBlue plugin to automatically create campaign emails in Sendy from articles
+# Sendy plugin for PencilBlue
+A PencilBlue plugin to create Sendy email campaigns from articles
